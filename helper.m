@@ -67,7 +67,7 @@ classdef helper
             hold off
             set(gcf, 'Color','#F0F0F0');
             set(gcf, 'InvertHardCopy', 'off');
-            saveas(gcf, 'histo.png');
+            saveas(gcf, 'denoise_bm4d/histo.png');
             
         end
         
@@ -114,7 +114,7 @@ classdef helper
                    % 'Interpreter','latex')
                 set(gcf, 'Color','#F0F0F0');
                 set(gcf, 'InvertHardCopy', 'off');
-                saveas(gcf, ['hi_',int2str(d),'.png']);
+                saveas(gcf, ['denoise_bm4d/denoise_quality_check_',int2str(d),'.png']);
                 for l=1:length(labels)
                     text((l-1)*(s2+sb)+s2/2,s1, labels{l}, ...
                         'VerticalAlignment','top','HorizontalAlignment','center')

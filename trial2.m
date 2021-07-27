@@ -1,1 +1,0 @@
-y = open_reshape('t1_icbm_normal_1mm_pn0_rf0.rawb');

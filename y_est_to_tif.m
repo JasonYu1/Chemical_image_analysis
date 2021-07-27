@@ -1,8 +1,8 @@
 function y_est_to_tif(y_est, K, filetype)
     % if filetype == '.txt'
-    imwrite(y_est(:,:,1), 'denoise_bm4d.tif');
+    imwrite(y_est(:,:,1), ['denoise_bm4d/', 'denoise_bm4d.tif']);
     for i=2:K
-        imwrite(y_est(:,:,i), 'denoise_bm4d.tif', 'WriteMode', 'append');
+        imwrite(y_est(:,:,i), ['denoise_bm4d/', 'denoise_bm4d.tif'], 'WriteMode', 'append');
     end
     %elseif filetype == '.tif'
     %    [A, B, C] = size(y_est);
@@ -15,9 +15,9 @@ function y_est_to_tif(y_est, K, filetype)
     %            end
     %        end
     %    end
-    %    imwrite(new(:,:,1), 'denoise_bm4d.tif');
+    %    imwrite(new(:,:,1), ['denoise_bm4d/', 'denoise_bm4d.tif']);
     %    for i=2:K
-    %        imwrite(new(:,:,i), 'denoise_bm4d.tif', 'WriteMode', 'append');
+    %        imwrite(new(:,:,i), ['denoise_bm4d/', 'denoise_bm4d.tif'], 'WriteMode', 'append');
     %    end
         
     %end
