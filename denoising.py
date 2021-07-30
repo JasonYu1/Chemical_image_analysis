@@ -8,11 +8,7 @@ from PIL import Image, ImageTk
 import cv2
 import webbrowser
 import numpy as np
-import threading
-import time
-from tqdm import tqdm
-#from PIL.Image import core as _imaging
-import progressbar as pb
+
 
 
 # set gui params

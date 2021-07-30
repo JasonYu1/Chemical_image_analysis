@@ -1,4 +1,4 @@
-function least_square(input, reference, peak_low, peak_high, raman_low, raman_high, sparsity_level)
+function [sigma, BG_spectrum] = least_square(input, reference, peak_low, peak_high, raman_low, raman_high, sparsity_level)
 %% Load data
 filepath = input;
 
@@ -64,8 +64,11 @@ y_sum = squeeze(mean(y,3));
 figure; histogram(y_sum);
 saveas(gcf, 'ls_chemical_maps/histogram.png');
 
+sigma = estimate_noise_level(y);
+
 BGmask=zeros(size(y_sum));
-BG=find(y_sum < 0.00);
+%BG=find(y_sum < 0.00);
+BG = find(y_sum < mean(sigma));
 BGmask(BG)=1;
 figure;imagesc(BGmask)
 saveas(gcf, 'ls_chemical_maps/bgmask.png');
@@ -79,9 +82,14 @@ BG_spectrum = BG_spectrum';
 figure;plot(BG_spectrum);
 saveas(gcf, 'ls_chemical_maps/bgspectrum.png');
 
+%sigma = estimate_noise_level(y);
+%figure;plot(sigma);
+
 y_sub = zeros(size(y));
 for i=1:1:Nz
     y_sub(:,:,i) = y(:,:,i) - BG_spectrum(i);
+    %y_sub(:,:,i) = y(:,:,i) - sigma(i);
+    
 end
 
 %% LS-LASSO unmixing
@@ -97,7 +105,13 @@ L = sparsity_level;
 
 for i = 1:Nx
     for j = 1:Ny
-        y_single_pixel = reshape(y_sub(i,j,:),[Nz,1]);
+        if isequal(filename, 'denoise_stv') == 1
+            y_single_pixel = reshape(y(i,j,:),[Nz,1]);
+        elseif isequal(filename, 'denoise_bm4d') == 1
+            y_single_pixel = reshape(y(i,j,:),[Nz,1]);  
+        else
+            y_single_pixel = reshape(y_sub(i,j,:),[Nz,1]);
+        end
         %c_single_pixel = inv(ref'*ref)*ref'*y_single_pixel;
         c_single_pixel = lasso(ref,y_single_pixel,'lambda',L,...
             'MaxIter',1e5, 'Alpha', 1);    
