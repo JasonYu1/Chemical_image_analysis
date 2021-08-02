@@ -1,4 +1,4 @@
-function least_square(input, reference, peak_low, peak_high, raman_low, raman_high, sparsity_level)
+function mcr(input, reference, peak_low, peak_high, raman_low, raman_high, sparsity_level, augmentation, itr)
 %% Load data
 filepath = input;
 
@@ -49,8 +49,8 @@ for i=1:n(1)
 end
 hold off
 legend show
-mkdir ls_chemical_maps
-saveas(gcf, 'ls_chemical_maps/pure_chemical_spectra.png');
+mkdir mcr_chemical_maps
+saveas(gcf, 'mcr_chemical_maps/pure_chemical_spectra.png');
 %plot(Raman_shift, BSA_n, 'Linewidth',1);
 %hold on
 %plot(Raman_shift, TAG_n, 'Linewidth',1);
@@ -62,7 +62,7 @@ saveas(gcf, 'ls_chemical_maps/pure_chemical_spectra.png');
 
 y_sum = squeeze(mean(y,3));
 figure; histogram(y_sum);
-saveas(gcf, 'ls_chemical_maps/histogram.png');
+saveas(gcf, 'mcr_chemical_maps/histogram.png');
 
 sigma = background_noise_level(y);
 
@@ -102,27 +102,16 @@ for i=1:n(1)
 end
 %ref = var;
 %ref = [BSA_n,TAG_n];    % Generate spectral reference matrix
-C = zeros(Nx,Ny,k);     % Preallocate an empty data matrix to store unmixing map
 L = sparsity_level;
 % L = 5e-2;               % Set sparsity level (\lambda), if 0 then LS fitting
+augnum  = augmentation*Nx*Ny;         % Number of datapoints for augmentation, default is 0.5*NxNy
+iter    = itr;                 % Number of iterations for ADMM
+tic
+[C_2D, S]  = ALS_aug( y_sub, ref, augnum, iter);
+toc
 
-for i = 1:Nx
-    for j = 1:Ny
-        y_single_pixel = reshape(y_sub(i,j,:),[Nz,1]);
-        %if isequal(filename, 'denoise_stv') == 1
-        %    y_single_pixel = reshape(y(i,j,:),[Nz,1]);
-        %elseif isequal(filename, 'denoise_bm4d') == 1
-        %    y_single_pixel = reshape(y(i,j,:),[Nz,1]);  
-        %else
-        %    y_single_pixel = reshape(y_sub(i,j,:),[Nz,1]);
-        %end
-        %c_single_pixel = inv(ref'*ref)*ref'*y_single_pixel;
-        c_single_pixel = lasso(ref,y_single_pixel,'lambda',L,...
-            'MaxIter',1e5, 'Alpha', 1);    
-        %c_single_pixel = ridge(y_single_pixel, ref, 5e-3);
-        C(i,j,:) = reshape(c_single_pixel,[1,1,k]);
-    end
-end
+C = reshape(C_2D,[Ny,Nx,k]);
+
 
 %% Quick check unmixing quality
 
@@ -134,14 +123,22 @@ clims = [disp_min disp_max];
 for i=1:n(1)
     subplot(1,2,i);imagesc(C(:,:,i),clims); colormap bone; axis off; axis square
 end
-saveas(gcf, 'ls_chemical_maps/unmixing_quality_check.png');
+saveas(gcf, 'mcr_chemical_maps/unmixing_quality_check.png');
 %subplot(1,2,1);imagesc(C(:,:,1),clims); colormap bone; axis off; axis square
 %subplot(1,2,2);imagesc(C(:,:,2),clims); colormap bone; axis off; axis square
 
+figure;
+hold on
+for i = 1:k
+    plot(Raman_shift, S(:,i), 'Linewidth',1);
+end
+hold off
+title 'Spectral profiles after MCR ALS'
+saveas(gcf, 'mcr_chemical_maps/new_spectral_profiles.png');
 %% Output as txt file
 
 output_ext   = '.txt';
-opt_filepath = 'ls_chemical_maps/';
+opt_filepath = 'mcr_chemical_maps/';
 %Protein_map  = C(:,:,1);
 %TAG_map      = C(:,:,2);
 

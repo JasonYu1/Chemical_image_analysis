@@ -939,8 +939,116 @@ class decomposition_mcr(tk.Frame):
                 elif denoising_method == 'STV':
                     master.switch_frame(denoising_stv)
 
+        def open_file():
+            """Open a file for editing"""
+            global varlist
+            if ent_lbl.get() == '':
+                global spectralpath
+                spectralpath = askopenfilename(
+                    filetypes=[("MAT File", "*.mat")]
+                )
+                if not spectralpath:
+                    return
+                ent_lbl_text.set(spectralpath)
+            else:
+                spectralpath = ent_lbl.get()
+
+            eng = matlab.engine.start_matlab()
+            varlist = eng.who(eng.matfile(spectralpath))
+            eng.quit()
+            n_component_chosen['values'] = varlist
+            n_component_chosen.set(varlist[0])
+            component_lbl['text'] = 'Components (' + str(len(varlist)) + '): '
+
+        def decompose():
+            eng = matlab.engine.start_matlab()
+            if denoising is False or n_use.get() == 0:
+                input_file = filepath
+            else:
+                if denoising_method == 'Bm4d':
+                    input_file = './denoise_bm4d/denoise_bm4d.tif'
+                elif denoising_method == 'STV':
+                    input_file = './denoise_stv/denoise_stv.tif'
+            eng.mcr(input_file, spectralpath, float(peaks_ent.get().split(',')[0]),
+                             float(peaks_ent.get().split(',')[1]), float(shifts_ent.get().split(',')[0]),
+                             float(shifts_ent.get().split(',')[1]), float(level_ent.get()), float(aug_ent.get()), float(itr_ent.get()), nargout=0)
+            eng.quit()
+            print(aug_ent.get(), itr_ent.get())
+
+            global img_ls
+            img = tifffile.imread('./mcr_chemical_maps/' + n_component.get() + '.tif')
+            load_raw = Image.fromarray(img)
+            load_raw = load_raw.resize((int(400 / 1.1), int(300 / 1.1)), Image.ANTIALIAS)
+            render_raw = ImageTk.PhotoImage(load_raw)
+            img_ls = tk.Label(self, image=render_raw)
+            img_ls.image = render_raw
+            img_ls.place(x=60, y=70)
+
+        def switch(self):  # self is needed here
+            img = tifffile.imread('./mcr_chemical_maps/' + n_component.get() + '.tif')
+            load_raw = Image.fromarray(img)
+            load_raw = load_raw.resize((int(400 / 1.1), int(300 / 1.1)), Image.ANTIALIAS)
+            render_raw = ImageTk.PhotoImage(load_raw)
+            img_ls.configure(image=render_raw)
+            img_ls.image = render_raw
+            img_ls.place(x=60, y=70)
+
         # Decomposition label
         tk.Label(self, text='Decomposition', font=(font, 14, 'bold')).place(x=10, y=10)
+
+        # spectral profile
+        tk.Label(self, text='Spectral Profile:').place(x=10, y=45)
+        ent_lbl_text = tk.StringVar()
+        ent_lbl_text.set('')
+        ent_lbl = tk.Entry(self, width=60, textvariable=ent_lbl_text)
+        ent_lbl.place(x=110, y=47)
+
+        # use denoised image ???
+        n_use = tk.IntVar()
+        n_use_chk = ttk.Checkbutton(self, text='Use Denoised Image', variable=n_use)
+        n_use_chk.place(x=540, y=45)
+        if denoising is False:
+            n_use_chk.state(['disabled'])
+            # n_use.set(False)
+        else:
+            n_use.set(True)
+
+        # load button
+        tk.Button(self, text='Load', command=open_file).place(x=490, y=42)
+
+        # entries
+        tk.Label(self, text='Peaks:').place(x=490, y=90)
+        tk.Label(self, text='Raman Shifts:').place(x=490, y=120)
+        tk.Label(self, text='Sparsity Level:').place(x=490, y=150)
+        tk.Label(self, text='Augmentation:').place(x=490, y=180)
+        tk.Label(self, text='Iteration:').place(x=490, y=210)
+        peaks_ent = tk.Entry(self, width=10)
+        peaks_ent.place(x=590, y=90)
+        peaks_ent.insert(0, '40,76')
+        shifts_ent = tk.Entry(self, width=10)
+        shifts_ent.place(x=590, y=120)
+        shifts_ent.insert(0, '2913,2994')
+        level_ent = tk.Entry(self, width=10)
+        level_ent.place(x=590, y=150)
+        level_ent.insert(0, '5e-2')
+        aug_ent = tk.Entry(self, width=10)
+        aug_ent.place(x=590, y=180)
+        aug_ent.insert(0, '0.5')
+        itr_ent = tk.Entry(self, width=10)
+        itr_ent.place(x=590, y=210)
+        itr_ent.insert(0, '5')
+
+        # modifiable parameters - DROPDOWN LISTS
+        component_lbl = tk.Label(self, text='Components:')
+        component_lbl.place(x=490, y=240)
+        n_component = tk.StringVar()
+        n_component_chosen = ttk.Combobox(self, width=7, textvariable=n_component)
+        n_component_chosen.bind("<<ComboboxSelected>>", switch)
+        n_component_chosen.set('')
+        n_component_chosen.place(x=590, y=240)
+
+        # Decompose button
+        tk.Button(self, text='Decompose', command=decompose).place(x=591, y=310)
 
         # Separator
         separator1 = ttk.Separator(self, orient='horizontal')
@@ -1104,10 +1212,6 @@ class decomposition_ls(tk.Frame):
         tk.Button(self, text='Back', command=back).place(x=10, y=365)
         tk.Button(self, text='User Manual', command=master.user_manual).place(x=60, y=365)
         tk.Button(self, text='Next').place(x=630, y=365)
-
-
-
-
 
 
 if __name__ == "__main__":
