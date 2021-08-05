@@ -50,6 +50,9 @@ end
 hold off
 legend show
 mkdir ls_chemical_maps
+title 'Spectral profiles';
+set(gcf, 'Color','#F0F0F0');
+set(gcf, 'InvertHardCopy', 'off');
 saveas(gcf, 'ls_chemical_maps/pure_chemical_spectra.png');
 %plot(Raman_shift, BSA_n, 'Linewidth',1);
 %hold on
@@ -132,7 +135,7 @@ disp_max = prctile(reshape(C(:,:,1),[Nx*Ny,1]),99.7);
 figure;
 clims = [disp_min disp_max];
 for i=1:n(1)
-    subplot(1,2,i);imagesc(C(:,:,i),clims); colormap bone; axis off; axis square
+    subplot(1,k,i);imagesc(C(:,:,i),clims); colormap bone; axis off; axis square
 end
 saveas(gcf, 'ls_chemical_maps/unmixing_quality_check.png');
 %subplot(1,2,1);imagesc(C(:,:,1),clims); colormap bone; axis off; axis square
@@ -149,7 +152,7 @@ for i=1:n(1)
     out_filename = [char(varlist(i)), '_lambda_', num2str(L) '_',filename, output_ext];
     dlmwrite([opt_filepath, out_filename], C(:,:,i), 'delimiter','\t');
     figure;
-    imagesc(C(:,:,i));
+    imshow(C(:,:,i));
     out_file_tif = [char(varlist(i)), '.tif'];
     set(gcf, 'Color','#F0F0F0');
     set(gcf, 'InvertHardCopy', 'off');

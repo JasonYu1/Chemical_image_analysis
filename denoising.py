@@ -1,13 +1,14 @@
 import tkinter as tk
 from tkinter import ttk, Canvas
 import os
-from tkinter.filedialog import askopenfilename
+from tkinter.filedialog import askopenfilename, askdirectory
 import matlab.engine
 import tifffile
 from PIL import Image, ImageTk
 import cv2
-import webbrowser
+import shutil
 import numpy as np
+from distutils.dir_util import copy_tree
 
 
 
@@ -40,6 +41,21 @@ class Main(tk.Tk):
     def user_manual(self):
         os.system('User_Manual.pdf')
 
+    def export(self):
+        directory = askdirectory()
+        if denoising is True:
+            if denoising_method == 'Bm4d':
+                folder = '/denoise_bm4d/'
+            if denoising_method == 'STV':
+                folder = '/denoise_stv/'
+            copy_tree("." + folder, directory + folder)
+        if decomposition is True:
+            if decomposition_method == 'MCR':
+                folder = '/mcr_chemical_maps/'
+            if decomposition_method == 'LS':
+                folder = '/ls_chemical_maps/'
+            copy_tree("." + folder, directory + folder)
+
 
 class file_page(tk.Frame):
     def __init__(self, master):
@@ -59,7 +75,7 @@ class file_page(tk.Frame):
             if ent_lbl.get() == '':
                 global filepath
                 filepath = askopenfilename(
-                    filetypes=[("Tif File", "*.tif"), ("Txt File", "*.txt"), ("All Files", "*.*")]
+                    filetypes=[("All Files", "*.*"), ("Tif File", "*.tif"), ("Txt File", "*.txt")]
                 )
                 if not filepath:
                     return
@@ -247,7 +263,7 @@ class file_page(tk.Frame):
 
 
         n_denoising_bm4d = tk.IntVar()
-        n_denoising_bm4d_chk = ttk.Checkbutton(self, text='Bm4d', variable=n_denoising_bm4d, command=bm4d_clicked)
+        n_denoising_bm4d_chk = ttk.Checkbutton(self, text='BM4d', variable=n_denoising_bm4d, command=bm4d_clicked)
         n_denoising_bm4d_chk.place(x=30, y=125)
 
         n_denoising_stv = tk.IntVar()
@@ -570,7 +586,7 @@ class denoising_bm4d(tk.Frame):
                 tk.Label(root, text='SSIM: '+str(ssimval)).place(x=x_position, y=50)
                 tk.Label(root, text='RMSE: '+str(rmse)).place(x=x_position, y=80)
 
-            tk.Button(self, text='Check Denoising Quality', command=check).place(x=475, y=365)
+            tk.Button(self, text='Check Denoising Quality', command=check).place(x=150, y=365)
 
         def Next():
             if decomposition == True:
@@ -691,7 +707,11 @@ class denoising_bm4d(tk.Frame):
         # Next and user manual
         tk.Button(self, text='Back', command=lambda: master.switch_frame(file_page)).place(x=10, y=365)
         tk.Button(self, text='User Manual', command=master.user_manual).place(x=60, y=365)
-        tk.Button(self, text='Next', command=Next).place(x=630, y=365)
+        if decomposition is True:
+            tk.Button(self, text='Next', command=Next).place(x=630, y=365)
+        else:
+            tk.Button(self, text='Done', command=master.destroy).place(x=630, y=365)
+            tk.Button(self, text='Export', command=master.export).place(x=570, y=365)
 
 
 
@@ -823,7 +843,7 @@ class denoising_stv(tk.Frame):
                 tk.Label(root, text='SSIM: '+str(ssimval)).place(x=x_position, y=50)
                 tk.Label(root, text='RMSE: '+str(rmse)).place(x=x_position, y=80)
 
-            tk.Button(self, text='Check Denoising Quality', command=check).place(x=475, y=365)
+            tk.Button(self, text='Check Denoising Quality', command=check).place(x=150, y=365)
 
         def Next():
             if decomposition_method == 'MCR':
@@ -921,7 +941,12 @@ class denoising_stv(tk.Frame):
         # Next and user manual
         tk.Button(self, text='Back', command=lambda: master.switch_frame(file_page)).place(x=10, y=365)
         tk.Button(self, text='User Manual', command=master.user_manual).place(x=60, y=365)
-        tk.Button(self, text='Next', command=Next).place(x=630, y=365)
+        if decomposition is True:
+            tk.Button(self, text='Next', command=Next).place(x=630, y=365)
+        else:
+            tk.Button(self, text='Done', command=master.destroy).place(x=630, y=365)
+            tk.Button(self, text='Export', command=master.export).place(x=570, y=365)
+
 
 
 class decomposition_mcr(tk.Frame):
@@ -963,6 +988,7 @@ class decomposition_mcr(tk.Frame):
         def decompose():
             eng = matlab.engine.start_matlab()
             if denoising is False or n_use.get() == 0:
+                #filepath = 'C:/Users/User/Dropbox/My PC (LAPTOP-7BC0EJ3C)/Downloads/LS_LASSO/Step size0.0040_Dwell time10 Celegans_Jian_1040-100_800-20_2.45MHz_R_OBJ5_P23460_F23070_2_up1um.txt'
                 input_file = filepath
             else:
                 if denoising_method == 'Bm4d':
@@ -973,25 +999,64 @@ class decomposition_mcr(tk.Frame):
                              float(peaks_ent.get().split(',')[1]), float(shifts_ent.get().split(',')[0]),
                              float(shifts_ent.get().split(',')[1]), float(level_ent.get()), float(aug_ent.get()), float(itr_ent.get()), nargout=0)
             eng.quit()
-            print(aug_ent.get(), itr_ent.get())
 
             global img_ls
             img = tifffile.imread('./mcr_chemical_maps/' + n_component.get() + '.tif')
             load_raw = Image.fromarray(img)
-            load_raw = load_raw.resize((int(400 / 1.1), int(300 / 1.1)), Image.ANTIALIAS)
+            r = 1.1
+            load_raw = load_raw.resize((int(400/r), int(300/r)), Image.ANTIALIAS)
             render_raw = ImageTk.PhotoImage(load_raw)
             img_ls = tk.Label(self, image=render_raw)
             img_ls.image = render_raw
-            img_ls.place(x=60, y=70)
+            img_ls.place(x=70, y=70)
+
+            # View spectra button
+            def spectra():
+                root = tk.Toplevel()
+                root.geometry("450x350")
+                root.title("Chemical Spectra")
+                image = Image.open('./mcr_chemical_maps/pure_chemical_spectra.png')
+                width, height = image.size
+                load = image.resize((int(width / 2), int(height / 2)), Image.ANTIALIAS)
+                render = ImageTk.PhotoImage(load)
+                img = tk.Label(root, image=render)
+                img.image = render
+                img.place(x=10, y=20)
+
+                # modifiable parameters - DROPDOWN LISTS
+                def spectrum_change(self):
+                    if n_spectrum.get() == 'Original':
+                        image = Image.open('./mcr_chemical_maps/pure_chemical_spectra.png')
+                    if n_spectrum.get() == 'New':
+                        image = Image.open('./mcr_chemical_maps/new_spectral_profiles.png')
+                    width, height = image.size
+                    load = image.resize((int(width / 2), int(height / 2)), Image.ANTIALIAS)
+                    render = ImageTk.PhotoImage(load)
+                    img.configure(image=render)
+                    img.image = render
+                    img.place(x=10, y=20)
+
+                spectrum_lbl = tk.Label(root, text='Spectra:')
+                spectrum_lbl.place(x=330, y=10)
+                n_spectrum = tk.StringVar()
+                n_spectrum_chosen = ttk.Combobox(root, width=7, textvariable=n_spectrum)
+                n_spectrum_chosen.bind("<<ComboboxSelected>>", spectrum_change)
+                n_spectrum_chosen['values'] = ('Original', 'New')
+                n_spectrum_chosen.set('Original')
+                n_spectrum_chosen.place(x=380, y=10)
+
+            tk.Button(self, text='View Spectra', command=spectra).place(x=150, y=365)
 
         def switch(self):  # self is needed here
             img = tifffile.imread('./mcr_chemical_maps/' + n_component.get() + '.tif')
             load_raw = Image.fromarray(img)
-            load_raw = load_raw.resize((int(400 / 1.1), int(300 / 1.1)), Image.ANTIALIAS)
+            r = 1.1
+            load_raw = load_raw.resize((int(400/r), int(300/r)), Image.ANTIALIAS)
             render_raw = ImageTk.PhotoImage(load_raw)
             img_ls.configure(image=render_raw)
             img_ls.image = render_raw
-            img_ls.place(x=60, y=70)
+            img_ls.place(x=70, y=70)
+
 
         # Decomposition label
         tk.Label(self, text='Decomposition', font=(font, 14, 'bold')).place(x=10, y=10)
@@ -1056,7 +1121,9 @@ class decomposition_mcr(tk.Frame):
 
         tk.Button(self, text='Back', command=back).place(x=10, y=365)
         tk.Button(self, text='User Manual', command=master.user_manual).place(x=60, y=365)
-        tk.Button(self, text='Next').place(x=630, y=365)
+        tk.Button(self, text='Done', command=master.destroy).place(x=630, y=365)
+        tk.Button(self, text='Export', command=master.export).place(x=570, y=365)
+
 
 
 class decomposition_phasor(tk.Frame):
@@ -1083,7 +1150,7 @@ class decomposition_phasor(tk.Frame):
 
         tk.Button(self, text='Back', command=back).place(x=10, y=365)
         tk.Button(self, text='User Manual', command=master.user_manual).place(x=60, y=365)
-        tk.Button(self, text='Next').place(x=630, y=365)
+        tk.Button(self, text='Done', command=master.destroy).place(x=630, y=365)
 
 
 class decomposition_ls(tk.Frame):
@@ -1138,23 +1205,40 @@ class decomposition_ls(tk.Frame):
             eng.least_square(input_file, spectralpath, float(peaks_ent.get().split(',')[0]), float(peaks_ent.get().split(',')[1]), float(shifts_ent.get().split(',')[0]), float(shifts_ent.get().split(',')[1]), float(level_ent.get()), nargout=0)
             eng.quit()
 
+            # View spectra button
+            def spectra():
+                root = tk.Toplevel()
+                root.geometry("450x350")
+                root.title("Chemical Spectra")
+                image = Image.open('./ls_chemical_maps/pure_chemical_spectra.png')
+                width, height = image.size
+                load = image.resize((int(width/ 2), int(height/ 2)), Image.ANTIALIAS)
+                render = ImageTk.PhotoImage(load)
+                img = tk.Label(root, image=render)
+                img.image = render
+                img.place(x=10, y=20)
+
+            tk.Button(self, text='View Spectra', command=spectra).place(x=150, y=365)
+
             global img_ls
             img = tifffile.imread('./ls_chemical_maps/'+n_component.get()+'.tif')
             load_raw = Image.fromarray(img)
-            load_raw = load_raw.resize((int(400/1.1), int(300/1.1)), Image.ANTIALIAS)
+            r = 1.1
+            load_raw = load_raw.resize((int(400/r), int(300/r)), Image.ANTIALIAS)
             render_raw = ImageTk.PhotoImage(load_raw)
             img_ls = tk.Label(self, image=render_raw)
             img_ls.image = render_raw
-            img_ls.place(x=60, y=70)
+            img_ls.place(x=70, y=70)
 
         def switch(self): # self is needed here
             img = tifffile.imread('./ls_chemical_maps/'+n_component.get()+'.tif')
             load_raw = Image.fromarray(img)
-            load_raw = load_raw.resize((int(400/1.1), int(300/1.1)), Image.ANTIALIAS)
+            r = 1.1
+            load_raw = load_raw.resize((int(400/r), int(300/r)), Image.ANTIALIAS)
             render_raw = ImageTk.PhotoImage(load_raw)
             img_ls.configure(image=render_raw)
             img_ls.image = render_raw
-            img_ls.place(x=60, y=70)
+            img_ls.place(x=70, y=70)
 
         # Decomposition label
         tk.Label(self, text='Decomposition', font=(font, 14, 'bold')).place(x=10, y=10)
@@ -1211,7 +1295,8 @@ class decomposition_ls(tk.Frame):
 
         tk.Button(self, text='Back', command=back).place(x=10, y=365)
         tk.Button(self, text='User Manual', command=master.user_manual).place(x=60, y=365)
-        tk.Button(self, text='Next').place(x=630, y=365)
+        tk.Button(self, text='Done', command=master.destroy).place(x=630, y=365)
+        tk.Button(self, text='Export', command=master.export).place(x=570, y=365)
 
 
 if __name__ == "__main__":

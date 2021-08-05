@@ -50,6 +50,9 @@ end
 hold off
 legend show
 mkdir mcr_chemical_maps
+title 'Spectral profiles';
+set(gcf, 'Color','#F0F0F0');
+set(gcf, 'InvertHardCopy', 'off');
 saveas(gcf, 'mcr_chemical_maps/pure_chemical_spectra.png');
 %plot(Raman_shift, BSA_n, 'Linewidth',1);
 %hold on
@@ -134,6 +137,8 @@ for i = 1:k
 end
 hold off
 title 'Spectral profiles after MCR ALS'
+set(gcf, 'Color','#F0F0F0');
+set(gcf, 'InvertHardCopy', 'off');
 saveas(gcf, 'mcr_chemical_maps/new_spectral_profiles.png');
 %% Output as txt file
 
@@ -146,7 +151,7 @@ for i=1:n(1)
     out_filename = [char(varlist(i)), '_lambda_', num2str(L) '_',filename, output_ext];
     dlmwrite([opt_filepath, out_filename], C(:,:,i), 'delimiter','\t');
     figure;
-    imagesc(C(:,:,i));
+    imshow(C(:,:,i));
     out_file_tif = [char(varlist(i)), '.tif'];
     set(gcf, 'Color','#F0F0F0');
     set(gcf, 'InvertHardCopy', 'off');
