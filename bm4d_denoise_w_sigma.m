@@ -1,0 +1,51 @@
+function bm4d_denoise_w_sigma(y, K, sigma, estimate_sigma, distribution, profile, do_wiener, verbose, variable_noise, noise_factor)
+
+% generate noisy phantom
+randn('seed',0);
+rand('seed',0);
+sigma = sigma/100;
+if variable_noise==1
+    disp(['Spatially-varying ',distribution,' noise in the range [',...
+        num2str(sigma),',',num2str(noise_factor*sigma),']'])
+    map = helper.getNoiseMap(y,noise_factor);
+else
+    disp(['Uniform ',distribution,' noise ',num2str(sigma)])
+    map = ones(size(y));
+end
+eta = sigma*map;
+if strcmpi(distribution,'Rice')
+    z = sqrt( (y+eta.*randn(size(y))).^2 + (eta.*randn(size(y))).^2 );
+else
+    z = y + eta.*randn(size(y));
+end
+
+% perform filtering
+disp('Denoising started')
+[y_est, sigma_est] = bm4d(z, distribution, (~estimate_sigma)*sigma, profile, do_wiener, verbose);
+
+
+% objective result
+%ind = y>0;
+%PSNR = 10*log10(1/mean((y(ind)-y_est(ind)).^2));
+%SSIM = ssim_index3d(y*255,y_est*255,[1 1 1],ind);
+%fprintf('Denoising completed: PSNR %.2fdB / SSIM %.2f \n', PSNR, SSIM)
+
+% plot historgram of the estimated standard deviation
+if estimate_sigma
+    helper.visualizeEstMap( y, sigma_est, eta );
+end
+
+% show cross-sections
+helper.visualizeXsect( y, z, y_est );
+
+
+
+imwrite(y_est(:,:,1), ['denoise_bm4d/', 'denoise_bm4d.tif']);
+for i=2:K
+    imwrite(y_est(:,:,i), ['denoise_bm4d/', 'denoise_bm4d.tif'], 'WriteMode', 'append');
+end
+
+end
+
+
+

@@ -434,6 +434,7 @@ class denoising_bm4d(tk.Frame):
             if n_crop_phantom.get() == 'True':
                 y = eng.cropdata(y, 51, 125)
 
+            """
             sigma = int(sigma_ent.get()) / 100
             if n_variable_noise.get() == 'True':
                 map = eng.helper.getNoiseMap(y, int(noise_factor_ent.get()))
@@ -447,6 +448,7 @@ class denoising_bm4d(tk.Frame):
             else:
                 z = eng.plus(y, eng.times(eta, eng.randn(eng.size(y))))
             # print(z)
+            """
             print('Denoising Started')
 
             if n_estimated_sigma.get() == 'True':
@@ -464,13 +466,22 @@ class denoising_bm4d(tk.Frame):
             else:
                 verbose = 0
 
+            if n_variable_noise.get() == 'True':
+                variable_noise = 1
+            else:
+                variable_noise = 0
+
+            eng.bm4d_denoise_w_sigma(y, K, float(sigma_ent.get()), estimate_sigma, n_distribution.get(), n_profile.get(), do_wiener, verbose, variable_noise, int(noise_factor_ent.get()), nargout=0)
+
+            """
             [y_est, sigma_est] = eng.bm4d(z, n_distribution.get(), eng.times(eng.minus(1, estimate_sigma), sigma),
                                           n_profile.get(), do_wiener, verbose, nargout=2)  # 1 - estimate_sigma to change boolean
 
+            
             # plot histogram of the estimated standard deviation
             if n_estimated_sigma.get() == 'True':
-                eng.helper.visualizeEstMap(y, sigma_est, eta, nargout=0)
-                """
+               eng.helper.visualizeEstMap(y, sigma_est, eta, nargout=0)
+              
                 global histo_btn
                 histo_btn = tk.Button(self, text='Histogram', command=histo)
                 histo_btn.place(x=370, y=300)
@@ -481,10 +492,11 @@ class denoising_bm4d(tk.Frame):
                     histo_btn.place_forget()
                 else:
                     pass
-                    """
+                
 
             eng.helper.visualizeXsect(y, z, y_est, nargout=0)
             eng.y_est_to_tif(y_est, K, filetype, nargout=0)
+            """
             eng.quit()
 
             def sel(self):
