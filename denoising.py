@@ -48,13 +48,13 @@ class Main(tk.Tk):
                 folder = '/denoise_bm4d/'
             if denoising_method == 'STV':
                 folder = '/denoise_stv/'
-            copy_tree("." + folder, directory + folder)
+            copy_tree("." + folder, directory +'/'+filename+'/' + folder)
         if decomposition is True:
             if decomposition_method == 'MCR':
                 folder = '/mcr_chemical_maps/'
             if decomposition_method == 'LS':
                 folder = '/ls_chemical_maps/'
-            copy_tree("." + folder, directory + folder)
+            copy_tree("." + folder, directory +'/'+filename+'/'+ folder)
 
 
 class file_page(tk.Frame):
@@ -93,16 +93,18 @@ class file_page(tk.Frame):
             eng = matlab.engine.start_matlab()
 
             if filetype == '.tif':
-                if tifffile.imread(filepath).dtype == 'uint16':
+                print('The tif file is '+ str(tifffile.imread(filepath).dtype))
+                if tifffile.imread(filepath).dtype == 'uint16' or 'uint32' or 'float32':
                     img = tifffile.imread(filepath)
-                    dst = np.zeros(shape=(img.shape[1], img.shape[2]))
+                    if len(img.shape) == 2:
+                        dst = np.zeros(shape=(img.shape[0], img.shape[1]))
+                    elif len(img.shape) == 3:
+                        dst = np.zeros(shape=(img.shape[1], img.shape[2]))
                     raw = cv2.normalize(img, dst, 0, 255, cv2.NORM_MINMAX)
                     im = np.uint8(raw)
                     imlist = []
                     for m in im:
                         imlist.append(Image.fromarray(m))
-                # imlist[0].save("test.tif", compression="tiff_deflate", save_all=True,
-                #               append_images=imlist[1:])
                     imlist[0].save("uint8.tif", save_all=True, append_images=imlist[1:])
 
             global K, M, N
@@ -114,8 +116,11 @@ class file_page(tk.Frame):
                 text = 'The dimensions of the file is ' + str(M) + ' x ' + str(N) + ' x ' + str(K) + '.'
 
                 def sel(self):
-                    # load_raw = Image.fromarray(data_raw[int(var.get())].astype('uint8'))
-                    load_raw = Image.fromarray(data_raw[int(var.get())])
+                    img = tifffile.imread(filepath)
+                    if len(img.shape) == 2:
+                        load_raw = Image.fromarray(data_raw)
+                    elif len(img.shape) == 3:
+                        load_raw = Image.fromarray(data_raw[int(var.get())])
                     width, height = load_raw.size
                     ratio = M / 200
                     load_raw = load_raw.resize((int(width / ratio), int(height / ratio)), Image.ANTIALIAS)
@@ -132,10 +137,16 @@ class file_page(tk.Frame):
                 var.set(int(K / 2))
                 global data_raw
                 img = tifffile.imread(filepath)
-                dst = np.zeros(shape=(img.shape[1], img.shape[2]))
+                if len(img.shape) == 2:
+                    dst = np.zeros(shape=(img.shape[0], img.shape[1]))
+                elif len(img.shape) == 3:
+                    dst = np.zeros(shape=(img.shape[1], img.shape[2]))
                 data_raw = cv2.normalize(img, dst, 0, 255, cv2.NORM_MINMAX)
-                #data_raw = tifffile.imread(filepath)
-                load_raw = Image.fromarray(data_raw[int(K / 2)])
+                if len(img.shape) == 2:
+                    load_raw = Image.fromarray(data_raw)
+                elif len(img.shape) == 3:
+                    load_raw = Image.fromarray(data_raw[int(K / 2)])
+
                 width, height = load_raw.size
                 ratio = M / 200
                 load_raw = load_raw.resize((int(width / ratio), int(height / ratio)), Image.ANTIALIAS)
@@ -374,26 +385,11 @@ class denoising_bm4d(tk.Frame):
         img_y = 70
 
         def denoise_bm4d():
-            """
-            def real():
-                progress = ttk.Progressbar(self, orient='horizontal', length=100, mode='indeterminate')
-                progress.place(x=20, y=400)
-                progress.start()
-                time.sleep(1000)
-                progress.stop()
-            threading.Thread(target=real, args=()).start()
-            """
+
             global n
             n = 1
             load = Image.open('gray.png')
-            """
-            progress = ttk.Progressbar(self, orient="horizontal", length=100, mode='indeterminate')
-            progress.place(x=10, y=400)
-            progress.start()
-            progress['maximum'] = 3
-            progress["value"] = 1
-            progress.update()
-            """
+
 
 
             #width, height = load.size
@@ -404,28 +400,11 @@ class denoising_bm4d(tk.Frame):
             img2.image = render2
             img2.place(x=200, y=50)
 
-            """
-            def histo():
-                load = Image.open('histo.png')
-                width, height = load.size
-                ratio = 2.5  # reduction ratio
-                left = width / 15
-                right = width
-                top = height / 5
-                bottom = 4 * height / 5
-                load = load.crop((left, top, right, bottom))
-                width, height = load.size
-                load = load.resize((int(width / ratio), int(height / ratio)), Image.ANTIALIAS)
-                render = ImageTk.PhotoImage(load)
-                img.configure(image=render)
-                img.image = render
-                img.place(x=200, y=100)
-            """
 
             eng = matlab.engine.start_matlab()
             # read original phantom
             if filetype == '.tif':
-                if tifffile.imread(filepath).dtype == 'uint16':
+                if tifffile.imread(filepath).dtype == 'uint16' or 'uint32' or 'float32':
                     y = eng.im2double(eng.loadtiff('uint8.tif'))
                 else:
                     y = eng.im2double(eng.loadtiff(filepath))
@@ -434,21 +413,7 @@ class denoising_bm4d(tk.Frame):
             if n_crop_phantom.get() == 'True':
                 y = eng.cropdata(y, 51, 125)
 
-            """
-            sigma = int(sigma_ent.get()) / 100
-            if n_variable_noise.get() == 'True':
-                map = eng.helper.getNoiseMap(y, int(noise_factor_ent.get()))
-            else:
-                map = eng.ones(eng.size(y))
 
-            eta = eng.times(sigma, map)
-            if n_distribution.get() == 'Rice':
-                z = eng.sqrt(eng.power(eng.plus(y, eng.times(eta, eng.randn(eng.size(y)))), 2) + eng.power(
-                    eng.times(eta, eng.randn(eng.size(y))), 2))
-            else:
-                z = eng.plus(y, eng.times(eta, eng.randn(eng.size(y))))
-            # print(z)
-            """
             print('Denoising Started')
 
             if n_estimated_sigma.get() == 'True':
@@ -473,51 +438,38 @@ class denoising_bm4d(tk.Frame):
 
             eng.bm4d_denoise_w_sigma(y, K, float(sigma_ent.get()), estimate_sigma, n_distribution.get(), n_profile.get(), do_wiener, verbose, variable_noise, int(noise_factor_ent.get()), nargout=0)
 
-            """
-            [y_est, sigma_est] = eng.bm4d(z, n_distribution.get(), eng.times(eng.minus(1, estimate_sigma), sigma),
-                                          n_profile.get(), do_wiener, verbose, nargout=2)  # 1 - estimate_sigma to change boolean
-
-            
-            # plot histogram of the estimated standard deviation
-            if n_estimated_sigma.get() == 'True':
-               eng.helper.visualizeEstMap(y, sigma_est, eta, nargout=0)
-              
-                global histo_btn
-                histo_btn = tk.Button(self, text='Histogram', command=histo)
-                histo_btn.place(x=370, y=300)
-                
-                
-            elif n_estimated_sigma.get() == 'False':
-                if 'histo_btn' in globals():
-                    histo_btn.place_forget()
-                else:
-                    pass
-                
-
-            eng.helper.visualizeXsect(y, z, y_est, nargout=0)
-            eng.y_est_to_tif(y_est, K, filetype, nargout=0)
-            """
             eng.quit()
 
             def sel(self):
                 if filetype == '.tif':
                     img = tifffile.imread(filepath)
-                    dst = np.zeros(shape=(img.shape[1], img.shape[2]))
+                    if len(img.shape) == 2:
+                        dst = np.zeros(shape=(img.shape[0], img.shape[1]))
+                    elif len(img.shape) == 3:
+                        dst = np.zeros(shape=(img.shape[1], img.shape[2]))
                     data_raw = cv2.normalize(img, dst, 0, 255, cv2.NORM_MINMAX)
                 elif filetype == '.txt':
                     data_raw = tifffile.imread(filename+'.tif')
-                load_raw = Image.fromarray(data_raw[int(var.get())].astype('uint8'))
+                    img = data_raw
+
+                if len(img.shape) == 2:
+                    load_raw = Image.fromarray(data_raw)
+                elif len(img.shape) == 3:
+                    load_raw = Image.fromarray(data_raw[int(var.get())])
+
                 width, height = load_raw.size
                 ratio = M/200
                 load_raw = load_raw.resize((int(width / ratio), int(height / ratio)), Image.ANTIALIAS)
                 render_raw = ImageTk.PhotoImage(load_raw)
                 img_raw.configure(image=render_raw)
-                #img_raw = tk.Label(self, image=render_raw)
                 img_raw.image = render_raw
                 img_raw.place(x=220, y=60)
 
                 data_denoise = tifffile.imread('./denoise_bm4d/denoise_bm4d.tif')
-                load_denoise = Image.fromarray(data_denoise[int(var.get())].astype('uint8'))
+                if len(img.shape) == 2:
+                    load_denoise = Image.fromarray(data_denoise)
+                elif len(img.shape) == 3:
+                    load_denoise = Image.fromarray(data_denoise[int(var.get())])
                 width, height = load_denoise.size
                 ratio = M/200
                 load_denoise = load_denoise.resize((int(width / ratio), int(height / ratio)), Image.ANTIALIAS)
@@ -535,11 +487,20 @@ class denoising_bm4d(tk.Frame):
 
             if filetype == '.tif':
                 img = tifffile.imread(filepath)
-                dst = np.zeros(shape=(img.shape[1], img.shape[2]))
+                if len(img.shape) == 2:
+                    dst = np.zeros(shape=(img.shape[0], img.shape[1]))
+                elif len(img.shape) == 3:
+                    dst = np.zeros(shape=(img.shape[1], img.shape[2]))
                 data_raw = cv2.normalize(img, dst, 0, 255, cv2.NORM_MINMAX)
             elif filetype == '.txt':
                 data_raw = tifffile.imread(filename+'.tif')
-            load_raw = Image.fromarray(data_raw[int(K/2)])
+                img = data_raw
+
+            if len(img.shape) == 2:
+                load_raw = Image.fromarray(data_raw)
+            elif len(img.shape) == 3:
+                load_raw = Image.fromarray(data_raw[int(K/2)])
+
             width, height = load_raw.size
             ratio = M/200
             load_raw = load_raw.resize((int(width / ratio), int(height / ratio)), Image.ANTIALIAS)
@@ -551,12 +512,16 @@ class denoising_bm4d(tk.Frame):
             img_raw.place(x=220, y=60)
 
             data_denoise = tifffile.imread('./denoise_bm4d/denoise_bm4d.tif')
-            load_denoise = Image.fromarray(data_denoise[int(K/2)])
+            if len(img.shape) == 2:
+                load_denoise = Image.fromarray(data_denoise)
+            elif len(img.shape) == 3:
+                load_denoise = Image.fromarray(data_denoise[int(K/2)])
             width, height = load_denoise.size
+            print(img.shape)
+            print(width, height)
             ratio = M/200
-            load_denoise = load_denoise.resize((int(width / ratio), int(height / ratio)), Image.ANTIALIAS)
+            load_denoise = load_denoise.resize((int(height / ratio), int(height / ratio)), Image.ANTIALIAS)
             render_denoise = ImageTk.PhotoImage(load_denoise)
-            # img_denoise.configure(image=render_denoise)
             global img_denoise
             img_denoise = tk.Label(self, image=render_denoise)
             img_denoise.image = render_denoise
@@ -690,31 +655,6 @@ class denoising_bm4d(tk.Frame):
         separator1 = ttk.Separator(self, orient='horizontal')
         separator1.place(x=0, y=350, relwidth=1, relheight=1)
 
-        """
-        # Dropdown lists
-        tk.Label(self, text='View Option:').place(x=208, y=12)
-
-        n_view = tk.StringVar()
-        n_view_chosen = ttk.Combobox(self, width=9, textvariable=n_view)
-        n_view_chosen['values'] = ('Horizontal', 'Coronal', 'Sagittal')
-        n_view_chosen.set('Horizontal')
-        n_view_chosen.bind("<<ComboboxSelected>>", change_type)
-        n_view_chosen.place(x=430, y=12)
-
-        n_type = tk.StringVar()
-        n_type_chosen = ttk.Combobox(self, width=8, textvariable=n_type)
-        n_type_chosen['values'] = ('Raw', 'Noise', 'Denoised')
-        n_type_chosen.set('Raw')
-        n_type_chosen.bind("<<ComboboxSelected>>", change_type)
-        n_type_chosen.place(x=350, y=12)
-
-        n_dimension = tk.StringVar()
-        n_dimension_chosen = ttk.Combobox(self, width=5, textvariable=n_dimension)
-        n_dimension_chosen['values'] = ('2D', '3D')
-        n_dimension_chosen.set('2D')
-        n_dimension_chosen.bind("<<ComboboxSelected>>", change_type)
-        n_dimension_chosen.place(x=287, y=12)
-        """
 
         # Next and user manual
         tk.Button(self, text='Back', command=lambda: master.switch_frame(file_page)).place(x=10, y=365)
@@ -747,40 +687,76 @@ class denoising_stv(tk.Frame):
             eng = matlab.engine.start_matlab()
             eng.addpath(eng.genpath('./spectral_tv'))
             if filetype == '.tif':
+                if tifffile.imread(filepath).dtype == 'uint16':
+                    input_type = 'uint16'
+                elif tifffile.imread(filepath).dtype == 'float32':
+                    input_type = 'float32'
+                elif tifffile.imread(filepath).dtype == 'uint8':
+                    input_type = 'xxx'
+
                 hyper_noisy = eng.read_hyperdata(filepath, M, N, K)
             elif filetype == '.txt':
+                input_type = 'xxx'
                 hyper_noisy = eng.open_reshape_txt(filepath)
             #[rows, cols, frames] = eng.size(hyper_noisy)
 
+
             beta = beta_ent.get().split(",")
-            eng.make_beta_array(n_tv_method.get(), float(rho_r_ent.get()), float(rho_o_ent.get()), float(beta[0]), float(beta[1]), float(beta[2]), float(gamma_ent.get()), float(max_itr_ent.get()), float(alpha_ent.get()), float(tol_ent.get()), hyper_noisy, K, nargout=0)
+            eng.make_beta_array(n_tv_method.get(), float(rho_r_ent.get()), float(rho_o_ent.get()), float(beta[0]), float(beta[1]), float(beta[2]), float(gamma_ent.get()), float(max_itr_ent.get()), float(alpha_ent.get()), float(tol_ent.get()), hyper_noisy, K, input_type, nargout=0)
             eng.quit()
 
             def sel(self):
                 if filetype == '.tif':
                     img = tifffile.imread(filepath)
-                    dst = np.zeros(shape=(img.shape[1], img.shape[2]))
+                    if len(img.shape) == 2:
+                        dst = np.zeros(shape=(img.shape[0], img.shape[1]))
+                    elif len(img.shape) == 3:
+                        dst = np.zeros(shape=(img.shape[1], img.shape[2]))
+
                     data_raw = cv2.normalize(img, dst, 0, 255, cv2.NORM_MINMAX)
+
+                    if len(img.shape) == 2:
+                        load_raw = Image.fromarray(data_raw)
+                    elif len(img.shape) == 3:
+                        load_raw = Image.fromarray(data_raw[int(var.get())])
                 elif filetype == '.txt':
                     data_raw = tifffile.imread(filename+'.tif')
-                load_raw = Image.fromarray(data_raw[int(var.get())].astype('uint8'))
+                    load_raw = Image.fromarray(data_raw[int(var.get())])
+
+
                 width, height = load_raw.size
                 ratio = M/200
                 load_raw = load_raw.resize((int(width / ratio), int(height / ratio)), Image.ANTIALIAS)
                 render_raw = ImageTk.PhotoImage(load_raw)
                 img_raw.configure(image=render_raw)
-                #img_raw = tk.Label(self, image=render_raw)
                 img_raw.image = render_raw
                 img_raw.place(x=220, y=60)
 
-                data_denoise = tifffile.imread('./denoise_stv/denoise_stv.tif')
-                load_denoise = Image.fromarray(data_denoise[int(var.get())].astype('uint8'))
+                if filetype == '.tif':
+                    if tifffile.imread(filepath).dtype == 'float32':
+                        data_denoise = tifffile.imread('./denoise_stv/denoise_stv_uint8.tif')
+                    else:
+                        data_denoise = tifffile.imread('./denoise_stv/denoise_stv.tif')
+                elif filetype == '.txt':
+                    data_denoise = tifffile.imread('./denoise_stv/denoise_stv.tif')
+
+                if filetype == '.tif':
+                    data_denoise = cv2.normalize(data_denoise, dst, 0, 255, cv2.NORM_MINMAX)
+
+                if filetype == '.txt':
+                    load_denoise = Image.fromarray(data_denoise[int(var.get())])
+                elif filetype == '.tif':
+                    img = tifffile.imread(filepath)
+                    if len(img.shape) == 2:
+                        load_denoise = Image.fromarray(data_denoise)
+                    elif len(img.shape) == 3:
+                        load_denoise = Image.fromarray(data_denoise[int(var.get())])
+
                 width, height = load_denoise.size
                 ratio = M/200
                 load_denoise = load_denoise.resize((int(width / ratio), int(height / ratio)), Image.ANTIALIAS)
                 render_denoise = ImageTk.PhotoImage(load_denoise)
                 img_denoise.configure(image=render_denoise)
-                #img_denoise = tk.Label(self, image=render_denoise)
                 img_denoise.image = render_denoise
                 img_denoise.place(x=450, y=60)
 
@@ -792,23 +768,50 @@ class denoising_stv(tk.Frame):
 
             if filetype == '.tif':
                 img = tifffile.imread(filepath)
-                dst = np.zeros(shape=(img.shape[1], img.shape[2]))
+                if len(img.shape) == 2:
+                    dst = np.zeros(shape=(img.shape[0], img.shape[1]))
+                elif len(img.shape) == 3:
+                    dst = np.zeros(shape=(img.shape[1], img.shape[2]))
                 data_raw = cv2.normalize(img, dst, 0, 255, cv2.NORM_MINMAX)
+
+                if len(img.shape) == 2:
+                    load_raw = Image.fromarray(data_raw)
+                elif len(img.shape) == 3:
+                    load_raw = Image.fromarray(data_raw[int(K / 2)])
             elif filetype == '.txt':
                 data_raw = tifffile.imread(filename+'.tif')
-            load_raw = Image.fromarray(data_raw[int(K/2)])
+                load_raw = Image.fromarray(data_raw[int(K / 2)])
+
             width, height = load_raw.size
             ratio = M/200
             load_raw = load_raw.resize((int(width / ratio), int(height / ratio)), Image.ANTIALIAS)
             render_raw = ImageTk.PhotoImage(load_raw)
-            #img_raw.configure(image=render_raw)
             global img_raw
             img_raw = tk.Label(self, image=render_raw)
             img_raw.image = render_raw
             img_raw.place(x=220, y=60)
 
-            data_denoise = tifffile.imread('./denoise_stv/denoise_stv.tif')
-            load_denoise = Image.fromarray(data_denoise[int(K/2)])
+            if filetype == '.tif':
+                if tifffile.imread(filepath).dtype == 'float32':
+                    data_denoise = tifffile.imread('./denoise_stv/denoise_stv_uint8.tif')
+                else:
+                    data_denoise = tifffile.imread('./denoise_stv/denoise_stv.tif')
+            elif filetype == '.txt':
+                data_denoise = tifffile.imread('./denoise_stv/denoise_stv.tif')
+
+            if filetype == '.tif':
+                data_denoise = cv2.normalize(data_denoise, dst, 0, 255, cv2.NORM_MINMAX)
+
+
+
+            if filetype == '.txt':
+                load_denoise = Image.fromarray(data_denoise[int(K/2)])
+            elif filetype == '.tif':
+                if len(img.shape) == 2:
+                    load_denoise = Image.fromarray(data_denoise)
+                elif len(img.shape) == 3:
+                    load_denoise = Image.fromarray(data_denoise[int(K/2)])
+
             width, height = load_denoise.size
             ratio = M/200
             load_denoise = load_denoise.resize((int(width / ratio), int(height / ratio)), Image.ANTIALIAS)
@@ -831,25 +834,30 @@ class denoising_stv(tk.Frame):
                 x_position = 80
                 eng = matlab.engine.start_matlab()
                 if filetype == '.tif':
-                    if tifffile.imread(filepath).dtype == 'uint16':
-                        eng.sixteen_to_eight(filepath, nargout=0)
-                        A = eng.imread('uint8.tif')
-                        ref = eng.imread('./denoise_stv/denoise_stv.tif')
-                        peaksnr = eng.peaksnr(A, ref)
-                        ssimval = eng.ssim(A, ref)
-                        rmse = eng.quality_check('uint8.tif', './denoise_stv/denoise_stv.tif')
+                    #if tifffile.imread(filepath).dtype == 'xxx':
+                        #eng.sixteen_to_eight(filepath, nargout=0)
+                        #A = eng.imread(filepath)
+                        #ref = eng.imread('./denoise_stv/denoise_stv_uint8.tif')
+                        #peaksnr = eng.peaksnr(A, ref)
+                        #ssimval = eng.ssim(A, ref)
+                        #rmse = eng.quality_check(filepath, './denoise_stv/denoise_stv_uint8.tif')
+                    A = eng.imread(filepath)
+                    if tifffile.imread(filepath).dtype == 'float32':
+                        dtype = 'float32'
+                        ref = eng.imread_first_frame('./denoise_stv/denoise_stv.tif')
                     else:
-                        A = eng.imread(filepath)
+                        dtype = 'xxx'
                         ref = eng.imread('./denoise_stv/denoise_stv.tif')
-                        peaksnr = eng.peaksnr(A, ref)
-                        ssimval = eng.ssim(A, ref)
-                        rmse = eng.quality_check(filepath, './denoise_stv/denoise_stv.tif')
+                    peaksnr = eng.peaksnr(A, ref)
+                    ssimval = eng.ssim(A, ref)
+                    rmse = eng.quality_check(filepath, './denoise_stv/denoise_stv.tif', dtype)
                 elif filetype == '.txt':
+                    dtype = 'xxx'
                     A = eng.imread(filename+'.tif')
                     ref = eng.imread('./denoise_stv/denoise_stv.tif')
                     peaksnr = eng.peaksnr(A, ref)
                     ssimval = eng.ssim(A, ref)
-                    rmse = eng.quality_check(filename+'.tif', './denoise_stv/denoise_stv.tif')
+                    rmse = eng.quality_check(filename+'.tif', './denoise_stv/denoise_stv.tif', dtype)
                 eng.quit()
                 tk.Label(root, text='PSNR: '+str(peaksnr)).place(x=x_position, y=20)
                 tk.Label(root, text='SSIM: '+str(ssimval)).place(x=x_position, y=50)

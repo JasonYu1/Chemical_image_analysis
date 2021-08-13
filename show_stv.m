@@ -1,5 +1,5 @@
-function show_stv(hyper_noisy, denoisedimage, num_frame)
-
+function show_stv(hyper_noisy, denoisedimage, num_frame, input_type)
+K = num_frame;
 %subplot(1,3,2);
 figure
 imshow(hyper_noisy(:,:,round(num_frame/2)),'InitialMagnification',250);
@@ -17,11 +17,45 @@ imshow(denoisedimage(:,:,round(num_frame/2)),'InitialMagnification',250);
 set(gcf, 'Color','#F0F0F0');
 set(gcf, 'InvertHardCopy', 'off');
 saveas(gcf, 'denoise_stv/stv_denoise_sample.png');
-im1 = imshow(denoisedimage(:,:,1),'InitialMagnification',250);
-imwrite(denoisedimage(:,:,1), 'denoise_stv/denoise_stv.tif');
-for i=2:num_frame
-    %imshow(denoisedimage(:,:,i), 'InitialMagnification',250);
-    imwrite(denoisedimage(:,:,i), 'denoise_stv/denoise_stv.tif', 'WriteMode', 'append');
+
+%input_type
+
+if strcmp(input_type, 'float32') == 1
+    create_single_32_bit_tif(denoisedimage, 'denoise_stv/denoise_stv.tif');
+    imwrite(denoisedimage(:,:,1), 'denoise_stv/denoise_stv_uint8.tif');
+
+    if K > 1
+        for i=2:num_frame
+            %imshow(denoisedimage(:,:,i), 'InitialMagnification',250);
+            imwrite(denoisedimage(:,:,i), 'denoise_stv/denoise_stv_uint8.tif', 'WriteMode', 'append');
+        end
+    end
+
+elseif strcmp(input_type, 'uint16') == 1
+    denoisedimage = im2uint16(denoisedimage);
+    imwrite(denoisedimage(:,:,1), 'denoise_stv/denoise_stv.tif');
+
+    if K > 1
+        for i=2:num_frame
+            %imshow(denoisedimage(:,:,i), 'InitialMagnification',250);
+            imwrite(denoisedimage(:,:,i), 'denoise_stv/denoise_stv.tif', 'WriteMode', 'append');
+        end
+    end
+
+
+elseif strcmp(input_type, 'xxx') == 1
+    imwrite(denoisedimage(:,:,1), 'denoise_stv/denoise_stv.tif');
+
+    if K > 1
+        for i=2:num_frame
+            %imshow(denoisedimage(:,:,i), 'InitialMagnification',250);
+            imwrite(denoisedimage(:,:,i), 'denoise_stv/denoise_stv.tif', 'WriteMode', 'append');
+        end
+    end
 end
+
+
+
+
 
 end

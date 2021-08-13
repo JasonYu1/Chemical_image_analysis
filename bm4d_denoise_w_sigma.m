@@ -31,18 +31,39 @@ disp('Denoising started')
 %fprintf('Denoising completed: PSNR %.2fdB / SSIM %.2f \n', PSNR, SSIM)
 
 % plot historgram of the estimated standard deviation
-if estimate_sigma
-    helper.visualizeEstMap( y, sigma_est, eta );
+if K > 1
+    if estimate_sigma
+        helper.visualizeEstMap( y, sigma_est, eta );
+    end
 end
 
 % show cross-sections
-helper.visualizeXsect( y, z, y_est );
+if K > 1
+    helper.visualizeXsect( y, z, y_est );
+end
 
+if K == 1
+    [A, B, C] = size(y_est);
+        new = zeros(B, A, C);
+        for i=1:A
+            for j=1:B
+                for k=1:C
+                    new(k,i,j) = y_est(i,j,k);
+                    % new(i,j,k) = y_est(i,j,k);
+                end
+            end
+        end
+end
 
+if K == 1
+    imwrite(new(:,:,1), ['denoise_bm4d/', 'denoise_bm4d.tif']);
+end
 
+if K > 1
 imwrite(y_est(:,:,1), ['denoise_bm4d/', 'denoise_bm4d.tif']);
-for i=2:K
-    imwrite(y_est(:,:,i), ['denoise_bm4d/', 'denoise_bm4d.tif'], 'WriteMode', 'append');
+    for i=2:K
+        imwrite(y_est(:,:,i), ['denoise_bm4d/', 'denoise_bm4d.tif'], 'WriteMode', 'append');
+    end
 end
 
 end

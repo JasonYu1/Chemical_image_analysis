@@ -14,9 +14,15 @@ function sigma = estimate_noise_level(y)
 % Purdue University
 % 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+K        = size(y,3);
+%size(y)
 % Select a region
-imshow(y(:,:,20), [],'InitialMagnification',250);
+if length(size(y)) == 2
+    imshow(y(:,:,1), [],'InitialMagnification',250);
+elseif length(size(y)) == 3
+    imshow(y(:,:,round(K/2)), [],'InitialMagnification',250);
+end
+
 h        = imrect;
 position = wait(h);
 close all;
