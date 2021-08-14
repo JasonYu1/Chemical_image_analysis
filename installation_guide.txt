@@ -26,6 +26,7 @@
 
 	b. Install just Python 3.8 
 		i. Install all the required packages (tkinter, tifffile, cv2, numpy, distutils, PIL) using pip or conda or other tools
+		ii. Clone from "https://github.com/JasonYu1/Chemical_image_analysis" using GIT
 
 
 3. Pull newest version from GitHub (click the download blue arrow everytime before usage)
