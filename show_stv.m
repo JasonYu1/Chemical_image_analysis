@@ -22,14 +22,7 @@ saveas(gcf, 'denoise_stv/stv_denoise_sample.png');
 
 if strcmp(input_type, 'float32') == 1
     create_single_32_bit_tif(denoisedimage, 'denoise_stv/denoise_stv.tif');
-    imwrite(denoisedimage(:,:,1), 'denoise_stv/denoise_stv_uint8.tif');
 
-    if K > 1
-        for i=2:num_frame
-            %imshow(denoisedimage(:,:,i), 'InitialMagnification',250);
-            imwrite(denoisedimage(:,:,i), 'denoise_stv/denoise_stv_uint8.tif', 'WriteMode', 'append');
-        end
-    end
 
 elseif strcmp(input_type, 'uint16') == 1
     denoisedimage = im2uint16(denoisedimage);
