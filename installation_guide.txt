@@ -1,0 +1,48 @@
+### Chemical Image Analysis - Installation Guide ####
+
+
+1. Install Matlab 2021a
+
+2. Install Python 3.8 
+
+	a. Install Anaconda3 (recommended)
+
+		i.  Open Anaconda Navigator
+
+		ii. Install Pycharm Pro (within Anaconda3) by signing up for a FREE academic JetBrain Account 
+
+		iii.Open Pycharm Pro --> Get from VCS --> Version control: Git  --> Under URL: enter "https://github.com/JasonYu1/Chemical_image_analysis" --> Clone
+
+		iv. In Anaconda Navigator, open PowerShell Prompt --> Type "pip install opencv-python" then press "Enter"
+
+		v.  Find the path where matlab is installed or in Matlab's command window, type "fullfile(matlabroot,'extern','engines','python')"
+
+		vi. In PowerShell Prompt, type and replace "matlabroot" with the path you just found in (v.)
+			
+			cd "matlabroot\extern\engines\python"
+			python setup.py install
+
+	OR
+
+	b. Install just Python 3.8 
+		i. Install all the required packages (tkinter, tifffile, cv2, numpy, distutils, PIL) using pip or conda or other tools
+
+
+3. Pull newest version from GitHub (click the download blue arrow everytime before usage)
+
+
+4. Open Interface - double click "denoising.py" on the left under "Project"
+
+	a. Click the run button (green triangular shape) or go to "run" in the toolbar then select "run"
+
+	OR
+
+	b. In the PowerShell Prompt (or cmd/Terminal), type and replace "python_root" with the directory where you installed python and replace "project_root" with the directory where you cloned the GitHub repository
+
+	
+			python_root\python.exe   project_root\denoising.py
+
+	
+
+
+
