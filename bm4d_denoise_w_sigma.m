@@ -84,7 +84,9 @@ elseif strcmp(input_type, 'float32') == 1
         end
     end
 
-
+elseif strcmp(input_type, 'txt') == 1
+    create_single_32_bit_tif(y_est, 'denoise_bm4d/denoise_bm4d.tif');
+    create_single_32_bit_tif_hyperstack(y_est, 'denoise_bm4d/denoise_bm4d_32bit.tif');
 else
     imwrite(y_est(:,:,1), ['denoise_bm4d/', 'denoise_bm4d.tif']);
     if K > 1

@@ -23,6 +23,9 @@ saveas(gcf, 'denoise_stv/stv_denoise_sample.png');
 if strcmp(input_type, 'float32') == 1
     create_single_32_bit_tif(denoisedimage, 'denoise_stv/denoise_stv.tif');
 
+elseif strcmp(input_type, 'txt') == 1
+    create_single_32_bit_tif(denoisedimage, 'denoise_stv/denoise_stv.tif');
+    create_single_32_bit_tif_hyperstack(denoisedimage, 'denoise_stv/denoise_stv_32bit.tif');
 
 elseif strcmp(input_type, 'uint16') == 1
     denoisedimage = im2uint16(denoisedimage);

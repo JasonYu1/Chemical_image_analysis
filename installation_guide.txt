@@ -1,7 +1,7 @@
 ### Chemical Image Analysis - Installation Guide ####
 
 
-1. Install Matlab 2021a
+1. Install Matlab 2021a (install also the "Statistics and Machine Learning Toolbox")
 
 2. Install Python 3.8 
 
