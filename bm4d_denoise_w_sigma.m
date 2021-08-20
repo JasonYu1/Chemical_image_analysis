@@ -1,4 +1,4 @@
-function bm4d_denoise_w_sigma(y, K, sigma, estimate_sigma, distribution, profile, do_wiener, verbose, variable_noise, noise_factor, input_type)
+function [PSNR, SSIM] = bm4d_denoise_w_sigma(y, K, sigma, estimate_sigma, distribution, profile, do_wiener, verbose, variable_noise, noise_factor, input_type)
 
 % generate noisy phantom
 randn('seed',0);
@@ -25,10 +25,10 @@ disp('Denoising started')
 
 
 % objective result
-%ind = y>0;
-%PSNR = 10*log10(1/mean((y(ind)-y_est(ind)).^2));
-%SSIM = ssim_index3d(y*255,y_est*255,[1 1 1],ind);
-%fprintf('Denoising completed: PSNR %.2fdB / SSIM %.2f \n', PSNR, SSIM)
+ind = y>0;
+PSNR = 10*log10(1/mean((y(ind)-y_est(ind)).^2));
+SSIM = ssim_index3d(y*255,y_est*255,[1 1 1],ind);
+fprintf('Denoising completed: PSNR %.2fdB / SSIM %.2f \n', PSNR, SSIM)
 
 % plot historgram of the estimated standard deviation
 if K > 1

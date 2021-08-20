@@ -454,7 +454,8 @@ class denoising_bm4d(tk.Frame):
             elif filetype == '.txt':
                 input_type = 'txt'
 
-            eng.bm4d_denoise_w_sigma(y, K, float(sigma_ent.get()), estimate_sigma, n_distribution.get(), n_profile.get(), do_wiener, verbose, variable_noise, int(noise_factor_ent.get()), input_type, nargout=0)
+            [PSNR, SSIM] = eng.bm4d_denoise_w_sigma(y, K, float(sigma_ent.get()), estimate_sigma, n_distribution.get(), n_profile.get(), do_wiener, verbose, variable_noise, int(noise_factor_ent.get()), input_type, nargout=2)
+            print(PSNR, SSIM)
             eng.quit()
 
             def sel(self):
@@ -568,26 +569,11 @@ class denoising_bm4d(tk.Frame):
             #
             def check():
                 root = tk.Toplevel()
-                root.geometry("300x120")
+                root.geometry("300x90")
                 root.title("Denoising Quality")
                 x_position = 80
-                eng = matlab.engine.start_matlab()
-                if filetype == '.tif':
-                        A = eng.imread(filepath)
-                        ref = eng.imread('./denoise_bm4d/denoise_bm4d.tif')
-                        peaksnr = eng.peaksnr(A, ref)
-                        ssimval = eng.ssim(A, ref)
-                        rmse = eng.quality_check(filepath, './denoise_bm4d/denoise_bm4d.tif')
-                elif filetype == '.txt':
-                    A = eng.imread(filename+'.tif')
-                    ref = eng.imread('./denoise_bm4d/denoise_bm4d.tif')
-                    peaksnr = eng.peaksnr(A, ref)
-                    ssimval = eng.ssim(A, ref)
-                    rmse = eng.quality_check(filename+'.tif', './denoise_bm4d/denoise_bm4d.tif')
-                eng.quit()
-                tk.Label(root, text='PSNR: '+str(peaksnr)).place(x=x_position, y=20)
-                tk.Label(root, text='SSIM: '+str(ssimval)).place(x=x_position, y=50)
-                tk.Label(root, text='RMSE: '+str(rmse)).place(x=x_position, y=80)
+                tk.Label(root, text='PSNR: '+str(PSNR)).place(x=x_position, y=20)
+                tk.Label(root, text='SSIM: '+str(SSIM)).place(x=x_position, y=50)
 
             tk.Button(self, text='Check Denoising Quality', command=check).place(x=150, y=365)
 
@@ -729,7 +715,7 @@ class denoising_stv(tk.Frame):
 
 
             beta = beta_ent.get().split(",")
-            eng.make_beta_array(n_tv_method.get(), float(rho_r_ent.get()), float(rho_o_ent.get()), float(beta[0]), float(beta[1]), float(beta[2]), float(gamma_ent.get()), float(max_itr_ent.get()), float(alpha_ent.get()), float(tol_ent.get()), hyper_noisy, K, input_type, nargout=0)
+            [PSNR, SSIM] = eng.make_beta_array(n_tv_method.get(), float(rho_r_ent.get()), float(rho_o_ent.get()), float(beta[0]), float(beta[1]), float(beta[2]), float(gamma_ent.get()), float(max_itr_ent.get()), float(alpha_ent.get()), float(tol_ent.get()), hyper_noisy, K, input_type, nargout=2)
             eng.quit()
 
             def sel(self):
@@ -764,9 +750,6 @@ class denoising_stv(tk.Frame):
 
 
                 data_denoise = tifffile.imread('./denoise_stv/denoise_stv.tif')
-
-
-                #if filetype == '.tif':
                 data_denoise = cv2.normalize(data_denoise, dst, 0, 255, cv2.NORM_MINMAX)
 
                 if filetype == '.txt':
@@ -848,26 +831,12 @@ class denoising_stv(tk.Frame):
             #
             def check():
                 root = tk.Toplevel()
-                root.geometry("300x120")
+                root.geometry("300x90")
                 root.title("Denoising Quality")
                 x_position = 80
-                eng = matlab.engine.start_matlab()
-                if filetype == '.tif':
-                    ref = eng.imread('./denoise_stv/denoise_stv.tif')
-                    A = eng.imread(filepath)
-                    peaksnr = eng.peaksnr(A, ref)
-                    ssimval = eng.ssim(A, ref)
-                    rmse = eng.quality_check(filepath, './denoise_stv/denoise_stv.tif')
-                elif filetype == '.txt':
-                    A = eng.imread(filename+'.tif')
-                    ref = eng.imread('./denoise_stv/denoise_stv.tif')
-                    peaksnr = eng.peaksnr(A, ref)
-                    ssimval = eng.ssim(A, ref)
-                    rmse = eng.quality_check(filename+'.tif', './denoise_stv/denoise_stv.tif')
-                eng.quit()
-                tk.Label(root, text='PSNR: '+str(peaksnr)).place(x=x_position, y=20)
-                tk.Label(root, text='SSIM: '+str(ssimval)).place(x=x_position, y=50)
-                tk.Label(root, text='RMSE: '+str(rmse)).place(x=x_position, y=80)
+                tk.Label(root, text='PSNR: '+str(PSNR)).place(x=x_position, y=20)
+                tk.Label(root, text='SSIM: '+str(SSIM)).place(x=x_position, y=50)
+
 
             tk.Button(self, text='Check Denoising Quality', command=check).place(x=150, y=365)
 
