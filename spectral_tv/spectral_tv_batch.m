@@ -1,4 +1,4 @@
-function [out, sigma] = spectral_tv(hyper_img, opts)
+function out = spectral_tv(hyper_img, opts, out_stv_sigma)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % out = spectral_tv(hyper_img, opts)
 % denoises image g by solving the following Spectral TV(STV) minimization
@@ -61,7 +61,8 @@ elseif nargin<2
     opts = [];
 end
 
-sigma     = estimate_noise_level(hyper_img);
+%sigma     = estimate_noise_level(hyper_img);
+sigma     = out_stv_sigma;
 w         = estimate_w(sigma, size(hyper_img));
 opts.w    = w;
 

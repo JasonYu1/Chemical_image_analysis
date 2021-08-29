@@ -1,4 +1,4 @@
-function [PSNR, SSIM] = bm4d_denoise_w_sigma(y, K, sigma, estimate_sigma, distribution, profile, do_wiener, verbose, variable_noise, noise_factor, input_type)
+function [PSNR, SSIM] = bm4d_denoise_w_sigma(y, K, sigma, estimate_sigma, distribution, profile, do_wiener, verbose, variable_noise, noise_factor, input_type, filename)
 
 % generate noisy phantom
 randn('seed',0);
@@ -58,17 +58,17 @@ if strcmp(input_type, 'uint16') == 1
     end
 
     if K == 1
-        imwrite(new(:,:,1), ['denoise_bm4d/', 'denoise_bm4d.tif']);
+        imwrite(new(:,:,1), ['denoise_bm4d/', filename, '_bm4d.tif']);
     end
 
     if K > 1
-        imwrite(y_est(:,:,1), ['denoise_bm4d/', 'denoise_bm4d.tif']);
+        imwrite(y_est(:,:,1), ['denoise_bm4d/', filename, '_bm4d.tif']);
         for i=2:K
-            imwrite(y_est(:,:,i), ['denoise_bm4d/', 'denoise_bm4d.tif'], 'WriteMode', 'append');
+            imwrite(y_est(:,:,i), ['denoise_bm4d/', filename, '_bm4d.tif'], 'WriteMode', 'append');
         end
     end
 elseif strcmp(input_type, 'float32') == 1
-    create_single_32_bit_tif(y_est, 'denoise_bm4d/denoise_bm4d.tif');
+    create_single_32_bit_tif(y_est, ['denoise_bm4d/', filename, '_bm4d.tif']);
 
 
     if K == 1
@@ -85,13 +85,13 @@ elseif strcmp(input_type, 'float32') == 1
     end
 
 elseif strcmp(input_type, 'txt') == 1
-    create_single_32_bit_tif(y_est, 'denoise_bm4d/denoise_bm4d.tif');
-    create_single_32_bit_tif_hyperstack(y_est, 'denoise_bm4d/denoise_bm4d_32bit.tif');
+    create_single_32_bit_tif(y_est, ['denoise_bm4d/', filename, '_bm4d.tif']);
+    create_single_32_bit_tif_hyperstack(y_est, ['denoise_bm4d/', filename, '_bm4d_32bit.tif']);
 else
-    imwrite(y_est(:,:,1), ['denoise_bm4d/', 'denoise_bm4d.tif']);
+    imwrite(y_est(:,:,1), ['denoise_bm4d/', filename, '_bm4d.tif']);
     if K > 1
         for i=2:K
-            imwrite(y_est(:,:,i), ['denoise_bm4d/', 'denoise_bm4d.tif'], 'WriteMode', 'append');
+            imwrite(y_est(:,:,i), ['denoise_bm4d/', filename, '_bm4d.tif'], 'WriteMode', 'append');
         end
     end
 end
