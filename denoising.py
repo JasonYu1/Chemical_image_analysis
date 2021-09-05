@@ -216,7 +216,11 @@ class file_page(tk.Frame):
             img_raw.place(x=img_x, y=img_y)
 
         def Next():
-            global denoising, decomposition, decomposition_method, denoising_method
+            global denoising, decomposition, decomposition_method, denoising_method, batch
+            if n_multi.get() == 1:
+                batch = 1
+            elif n_multi.get() == 0:
+                batch = 0
             denoising = False
             decomposition = False
             if n_denoising.get() == 1:
@@ -247,17 +251,11 @@ class file_page(tk.Frame):
                 if n_denoising_stv.get() == 1:
                     master.switch_frame(denoising_stv)
 
-        global batch
-        batch = 0
         def multi_clicked():
             if n_multi.get() == 1:
-                #select_btn["text"] = "Select Folder"
-                batch = 1
                 if ent_lbl_text.get() == '':
-                    instruction["text"] = 'Choose the first file in the folder for batch processing.'
+                    instruction["text"] = 'Choose a random file in the folder for batch processing.'
             elif n_multi.get() == 0:
-                #select_btn["text"] = "Select File"
-                batch = 0
                 if ent_lbl_text.get() == '':
                     instruction["text"] = ''
 
@@ -415,6 +413,7 @@ class denoising_bm4d(tk.Frame):
         self.master.title('Chemical Image Analysis - Denoising - bm4d')
         global n
         n = 0
+        print(batch)
         newpath = r'./denoise_bm4d'
         if not os.path.exists(newpath):
             os.mkdir(newpath)
@@ -487,10 +486,11 @@ class denoising_bm4d(tk.Frame):
                 print(PSNR, SSIM)
             elif batch == 1:
                 for i in range(len(os.listdir(directory))):
-                    filetype_batch = os.path.splittext(os.listdir(directory)[i])[1]
-                    filename_batch = os.path.splittext(os.listdir(directory)[i])[0]
+                    print(i)
+                    filetype_batch = os.path.splitext(os.listdir(directory)[i])[1]
+                    filename_batch = os.path.splitext(os.listdir(directory)[i])[0]
                     if filetype_batch == '.txt' or '.tif':
-                        filepath_batch = directory + os.listdir(directory)[i]
+                        filepath_batch = directory + '/' + os.listdir(directory)[i]
                         if filetype_batch == '.tif':
                             y = eng.im2double(eng.loadtiff(filepath_batch))
                         if filetype_batch == '.txt':
@@ -735,6 +735,9 @@ class denoising_stv(tk.Frame):
         self.master.title('Chemical Image Analysis - Denoising - STV')
         img_x = 250
         img_y = 70
+        print(batch)
+        print(directory)
+        print(os.listdir(directory))
         global n
         n = 0
         newpath = r'./denoise_stv'
@@ -758,6 +761,7 @@ class denoising_stv(tk.Frame):
             elif filetype == '.txt':
                 input_type = 'txt'
 
+            print('batch is ' + str(batch))
             if batch == 0:
                 # read original phantom
                 if filetype == '.tif':
@@ -775,17 +779,17 @@ class denoising_stv(tk.Frame):
             elif batch == 1:
                 for i in range(len(os.listdir(directory))):
                     print(i)
-                    filetype_batch = os.path.splittext(os.listdir(directory)[i])[1]
-                    filename_batch = os.path.splittext(os.listdir(directory)[i])[0]
+                    filetype_batch = os.path.splitext(os.listdir(directory)[i])[1]
+                    filename_batch = os.path.splitext(os.listdir(directory)[i])[0]
 
                     if filetype_batch == '.txt' or '.tif':
-                        filepath_batch = directory + os.listdir(directory)[i]
+                        filepath_batch = directory + '/'+ os.listdir(directory)[i]
                         if filetype_batch == '.tif':
                             hyper_noisy = eng.read_hyperdata(filepath_batch, M, N, K)
                         if filetype_batch == '.txt':
                             hyper_noisy = eng.open_reshape_txt(filepath_batch)
 
-                        if filename == filename_batch:
+                        if i == 0:
                             beta = beta_ent.get().split(",")
                             [PSNR, SSIM, out_stv_sigma] = eng.make_beta_array(n_tv_method.get(), float(rho_r_ent.get()),
                                                                         float(rho_o_ent.get()),
