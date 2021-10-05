@@ -1,4 +1,4 @@
-function least_square(input, reference, peak_low, peak_high, raman_low, raman_high, sparsity_level)
+function least_square(input, original_filename, reference, peak_low, peak_high, raman_low, raman_high, sparsity_level)
 %% Load data
 filepath = input;
 
@@ -135,7 +135,7 @@ disp_max = prctile(reshape(C(:,:,1),[Nx*Ny,1]),99.7);
 figure;
 clims = [disp_min disp_max];
 for i=1:n(1)
-    subplot(1,k,i);imagesc(C(:,:,i),clims); colormap bone; axis off; axis square
+    subplot(1,n(1),i);imagesc(C(:,:,i),clims); colormap bone; axis off; axis square
 end
 saveas(gcf, 'ls_chemical_maps/unmixing_quality_check.png');
 %subplot(1,2,1);imagesc(C(:,:,1),clims); colormap bone; axis off; axis square
@@ -153,7 +153,7 @@ for i=1:n(1)
     dlmwrite([opt_filepath, out_filename], C(:,:,i), 'delimiter','\t');
     figure;
     imshow(C(:,:,i));
-    out_file_tif = [char(varlist(i)), '.tif'];
+    out_file_tif = [original_filename, '_', char(varlist(i)), '.tif'];
     set(gcf, 'Color','#F0F0F0');
     set(gcf, 'InvertHardCopy', 'off');
     saveas(gcf, [opt_filepath, out_file_tif]);

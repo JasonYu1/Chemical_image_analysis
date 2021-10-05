@@ -1054,26 +1054,30 @@ class decomposition_mcr(tk.Frame):
 
         def decompose():
             eng = matlab.engine.start_matlab()
-            if denoising is False or n_use.get() == 0:
-                input_file = filepath
-            else:
-                if denoising_method == 'Bm4d':
-                    if filetype == '.tif':
-                        input_file = './denoise_bm4d/' + filename + '_bm4d.tif'
-                    elif filetype == '.txt':
-                        input_file = './denoise_bm4d/' + filename + '_bm4d_32bit.tif'
-                elif denoising_method == 'STV':
-                    if filetype == '.tif':
-                        input_file = './denoise_stv/'+filename+'_stv.tif'
-                    elif filetype == '.txt':
-                        input_file = './denoise_stv/'+filename+'_stv_32bit.tif'
-            eng.mcr(input_file, spectralpath, float(peaks_ent.get().split(',')[0]),
+            if batch == 0:
+                if denoising is False or n_use.get() == 0:
+                    input_file = filepath
+                else:
+                    if denoising_method == 'Bm4d':
+                        if filetype == '.tif':
+                            input_file = './denoise_bm4d/' + filename + '_bm4d.tif'
+                        elif filetype == '.txt':
+                            input_file = './denoise_bm4d/' + filename + '_bm4d_32bit.tif'
+                    elif denoising_method == 'STV':
+                        if filetype == '.tif':
+                            input_file = './denoise_stv/'+filename+'_stv.tif'
+                        elif filetype == '.txt':
+                            input_file = './denoise_stv/'+filename+'_stv_32bit.tif'
+                eng.mcr(input_file, filename, spectralpath, float(peaks_ent.get().split(',')[0]),
                              float(peaks_ent.get().split(',')[1]), float(shifts_ent.get().split(',')[0]),
                              float(shifts_ent.get().split(',')[1]), float(level_ent.get()), float(aug_ent.get()), float(itr_ent.get()), nargout=0)
+
+
+
             eng.quit()
 
             global img_ls
-            img = tifffile.imread('./mcr_chemical_maps/' + n_component.get() + '.tif')
+            img = tifffile.imread('./mcr_chemical_maps/' + filename + '_' + n_component.get() + '.tif')
             load_raw = Image.fromarray(img)
             r = 1.1
             load_raw = load_raw.resize((int(400/r), int(300/r)), Image.ANTIALIAS)
@@ -1120,7 +1124,7 @@ class decomposition_mcr(tk.Frame):
             tk.Button(self, text='View Spectra', command=spectra).place(x=150, y=365)
 
         def switch(self):  # self is needed here
-            img = tifffile.imread('./mcr_chemical_maps/' + n_component.get() + '.tif')
+            img = tifffile.imread('./mcr_chemical_maps/' + filename + '_' + n_component.get() + '.tif')
             load_raw = Image.fromarray(img)
             r = 1.1
             load_raw = load_raw.resize((int(400/r), int(300/r)), Image.ANTIALIAS)
@@ -1264,20 +1268,22 @@ class decomposition_ls(tk.Frame):
 
         def decompose():
             eng = matlab.engine.start_matlab()
-            if denoising is False or n_use.get()==0:
-                input_file = filepath
-            else:
-                if denoising_method == 'Bm4d':
-                    if filetype == '.tif':
-                        input_file = './denoise_bm4d/' + filename + '_bm4d.tif'
-                    elif filetype == '.txt':
-                        input_file = './denoise_bm4d/' + filename + '_bm4d_32bit.tif'
-                elif denoising_method == 'STV':
-                    if filetype == '.tif':
-                        input_file = './denoise_stv/'+filename+'_stv.tif'
-                    elif filetype == '.txt':
-                        input_file = './denoise_stv/'+filename+'_stv_32bit.tif'
-            eng.least_square(input_file, spectralpath, float(peaks_ent.get().split(',')[0]), float(peaks_ent.get().split(',')[1]), float(shifts_ent.get().split(',')[0]), float(shifts_ent.get().split(',')[1]), float(level_ent.get()), nargout=0)
+            if batch == 0:
+                if denoising is False or n_use.get()==0:
+                    input_file = filepath
+                else:
+                    if denoising_method == 'Bm4d':
+                        if filetype == '.tif':
+                            input_file = './denoise_bm4d/' + filename + '_bm4d.tif'
+                        elif filetype == '.txt':
+                            input_file = './denoise_bm4d/' + filename + '_bm4d_32bit.tif'
+                    elif denoising_method == 'STV':
+                        if filetype == '.tif':
+                            input_file = './denoise_stv/'+filename+'_stv.tif'
+                        elif filetype == '.txt':
+                            input_file = './denoise_stv/'+filename+'_stv_32bit.tif'
+                eng.least_square(input_file, filename, spectralpath, float(peaks_ent.get().split(',')[0]), float(peaks_ent.get().split(',')[1]), float(shifts_ent.get().split(',')[0]), float(shifts_ent.get().split(',')[1]), float(level_ent.get()), nargout=0)
+
             eng.quit()
 
             # View spectra button
@@ -1296,9 +1302,9 @@ class decomposition_ls(tk.Frame):
             tk.Button(self, text='View Spectra', command=spectra).place(x=150, y=365)
 
             global img_ls
-            img = tifffile.imread('./ls_chemical_maps/'+n_component.get()+'.tif')
-            dst = np.zeros(shape=(M, N))
-            img = cv2.normalize(img, dst, 0, 255, cv2.NORM_MINMAX)
+            img = tifffile.imread('./ls_chemical_maps/'+ filename + '_' + n_component.get()+'.tif')
+            #dst = np.zeros(shape=(M, N))
+            #img = cv2.normalize(img, dst, 0, 255, cv2.NORM_MINMAX)
             load_raw = Image.fromarray(img)
             r = 1.1
             load_raw = load_raw.resize((int(400/r), int(300/r)), Image.ANTIALIAS)
@@ -1308,9 +1314,9 @@ class decomposition_ls(tk.Frame):
             img_ls.place(x=70, y=70)
 
         def switch(self): # self is needed here
-            img = tifffile.imread('./ls_chemical_maps/'+n_component.get()+'.tif')
-            dst = np.zeros(shape=(M, N))
-            img = cv2.normalize(img, dst, 0, 255, cv2.NORM_MINMAX)
+            img = tifffile.imread('./ls_chemical_maps/'+ filename + '_' + n_component.get()+'.tif')
+            #dst = np.zeros(shape=(M, N))
+            #img = cv2.normalize(img, dst, 0, 255, cv2.NORM_MINMAX)
             load_raw = Image.fromarray(img)
             r = 1.1
             load_raw = load_raw.resize((int(400/r), int(300/r)), Image.ANTIALIAS)

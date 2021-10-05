@@ -1,4 +1,4 @@
-function mcr(input, reference, peak_low, peak_high, raman_low, raman_high, sparsity_level, augmentation, itr)
+function mcr(input, filename, reference, peak_low, peak_high, raman_low, raman_high, sparsity_level, augmentation, itr)
 %% Load data
 filepath = input;
 
@@ -67,7 +67,7 @@ y_sum = squeeze(mean(y,3));
 figure; histogram(y_sum);
 saveas(gcf, 'mcr_chemical_maps/histogram.png');
 
-sigma = background_noise_level(y);
+sigma = background_noise_level(y));
 
 %BGmask=zeros(size(y_sum));
 %BG=find(y_sum < 0.00);
@@ -108,6 +108,8 @@ end
 L = sparsity_level;
 % L = 5e-2;               % Set sparsity level (\lambda), if 0 then LS fitting
 augnum  = augmentation*Nx*Ny;         % Number of datapoints for augmentation, default is 0.5*NxNy
+augnum = uint16(augnum);
+augnum
 iter    = itr;                 % Number of iterations for ADMM
 tic
 [C_2D, S]  = ALS_aug( y_sub, ref, augnum, iter);
@@ -124,7 +126,7 @@ disp_max = prctile(reshape(C(:,:,1),[Nx*Ny,1]),99.7);
 figure;
 clims = [disp_min disp_max];
 for i=1:n(1)
-    subplot(1,2,i);imagesc(C(:,:,i),clims); colormap bone; axis off; axis square
+    subplot(1,n(1),i);imagesc(C(:,:,i),clims); colormap bone; axis off; axis square
 end
 saveas(gcf, 'mcr_chemical_maps/unmixing_quality_check.png');
 %subplot(1,2,1);imagesc(C(:,:,1),clims); colormap bone; axis off; axis square
@@ -152,7 +154,7 @@ for i=1:n(1)
     dlmwrite([opt_filepath, out_filename], C(:,:,i), 'delimiter','\t');
     figure;
     imshow(C(:,:,i));
-    out_file_tif = [char(varlist(i)), '.tif'];
+    out_file_tif = [filename, '_', char(varlist(i)), '.tif'];
     set(gcf, 'Color','#F0F0F0');
     set(gcf, 'InvertHardCopy', 'off');
     saveas(gcf, [opt_filepath, out_file_tif]);
