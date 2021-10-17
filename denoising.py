@@ -1068,10 +1068,91 @@ class decomposition_mcr(tk.Frame):
                             input_file = './denoise_stv/'+filename+'_stv.tif'
                         elif filetype == '.txt':
                             input_file = './denoise_stv/'+filename+'_stv_32bit.tif'
-                eng.mcr(input_file, filename, spectralpath, float(peaks_ent.get().split(',')[0]),
+                eng.mcr(input_file, filename, spectralpath, n_normalize.get(), float(peaks_ent.get().split(',')[0]),
                              float(peaks_ent.get().split(',')[1]), float(shifts_ent.get().split(',')[0]),
                              float(shifts_ent.get().split(',')[1]), float(level_ent.get()), float(aug_ent.get()), float(itr_ent.get()), nargout=0)
+            elif batch == 1:
+                if denoising is False or n_use.get() == 0:
+                    count = 0
+                    for i in range(len(os.listdir(directory))):
+                        print(i)
+                        filetype_batch = os.path.splitext(os.listdir(directory)[i])[1]
+                        filename_batch = os.path.splitext(os.listdir(directory)[i])[0]
 
+                        if filetype_batch == '.txt' or '.tif':
+                            count = count + 1
+                            filepath_batch = directory + '/' + os.listdir(directory)[i]
+                            if count == 1:
+                                sigma = eng.mcr(filepath_batch, filename_batch, spectralpath, n_normalize.get(),
+                                                 float(peaks_ent.get().split(',')[0]),
+                                                 float(peaks_ent.get().split(',')[1]),
+                                                 float(shifts_ent.get().split(',')[0]),
+                                                 float(shifts_ent.get().split(',')[1]), float(level_ent.get()),  float(aug_ent.get()), float(itr_ent.get()),
+                                                 nargout=1)
+                            else:
+                                eng.mcr_batch(sigma, filepath_batch, filename_batch, spectralpath, n_normalize.get(),
+                                                 float(peaks_ent.get().split(',')[0]),
+                                                 float(peaks_ent.get().split(',')[1]),
+                                                 float(shifts_ent.get().split(',')[0]),
+                                                 float(shifts_ent.get().split(',')[1]), float(level_ent.get()), float(aug_ent.get()), float(itr_ent.get()),
+                                                 nargout=0)
+                else:
+                    if denoising_method == 'Bm4d':
+                        count = 0
+                        for i in range(len(os.listdir('./denoise_bm4d'))):
+                            filetype_batch = os.path.splitext(os.listdir('./denoise_bm4d')[i])[1]
+                            filename_batch = os.path.splitext(os.listdir('./denoise_bm4d')[i])[0]
+                            filename_final = filename_batch.split('_bm4d')[0]
+
+                            if filename_batch != '.png':
+                                count = count + 1
+                                filepath_batch = './denoise_bm4d/' + os.listdir('./denoise_bm4d')[i]
+                                if count == 1:
+                                    sigma = eng.mcr(filepath_batch, filename_final, spectralpath,
+                                                             n_normalize.get(),
+                                                             float(peaks_ent.get().split(',')[0]),
+                                                             float(peaks_ent.get().split(',')[1]),
+                                                             float(shifts_ent.get().split(',')[0]),
+                                                             float(shifts_ent.get().split(',')[1]),
+                                                             float(level_ent.get()), float(aug_ent.get()), float(itr_ent.get()),
+                                                             nargout=1)
+                                else:
+                                    eng.mcr_batch(sigma, filepath_batch, filename_final, spectralpath,
+                                                           n_normalize.get(),
+                                                           float(peaks_ent.get().split(',')[0]),
+                                                           float(peaks_ent.get().split(',')[1]),
+                                                           float(shifts_ent.get().split(',')[0]),
+                                                           float(shifts_ent.get().split(',')[1]),
+                                                           float(level_ent.get()), float(aug_ent.get()), float(itr_ent.get()),
+                                                           nargout=0)
+                    elif denoising_method == 'STV':
+                        count = 0
+                        for i in range(len(os.listdir('./denoise_stv'))):
+                            filetype_batch = os.path.splitext(os.listdir('./denoise_stv')[i])[1]
+                            filename_batch = os.path.splitext(os.listdir('./denoise_stv')[i])[0]
+                            filename_final = filename_batch.split('_stv')[0]
+
+                            if filetype_batch != '.png':
+                                count = count + 1
+                                filepath_batch = './denoise_stv/' + os.listdir('./denoise_stv')[i]
+                                if count == 1:
+                                    sigma = eng.mcr(filepath_batch, filename_final, spectralpath,
+                                                             n_normalize.get(),
+                                                             float(peaks_ent.get().split(',')[0]),
+                                                             float(peaks_ent.get().split(',')[1]),
+                                                             float(shifts_ent.get().split(',')[0]),
+                                                             float(shifts_ent.get().split(',')[1]),
+                                                             float(level_ent.get()), float(aug_ent.get()), float(itr_ent.get()),
+                                                             nargout=1)
+                                else:
+                                    eng.mcr_batch(sigma, filepath_batch, filename_final, spectralpath,
+                                                           n_normalize.get(),
+                                                           float(peaks_ent.get().split(',')[0]),
+                                                           float(peaks_ent.get().split(',')[1]),
+                                                           float(shifts_ent.get().split(',')[0]),
+                                                           float(shifts_ent.get().split(',')[1]),
+                                                           float(level_ent.get()), float(aug_ent.get()), float(itr_ent.get()),
+                                                           nargout=0)
 
 
             eng.quit()
@@ -1147,12 +1228,18 @@ class decomposition_mcr(tk.Frame):
         # use denoised image ???
         n_use = tk.IntVar()
         n_use_chk = ttk.Checkbutton(self, text='Use Denoised Image', variable=n_use)
-        n_use_chk.place(x=540, y=45)
+        n_use_chk.place(x=540, y=35)
         if denoising is False:
             n_use_chk.state(['disabled'])
             # n_use.set(False)
         else:
             n_use.set(True)
+
+        # normalize image ???
+        n_normalize = tk.IntVar()
+        n_normalize_chk = ttk.Checkbutton(self, text='Normalize Image', variable=n_normalize)
+        n_normalize_chk.place(x=540, y=55)
+        n_normalize.set(True)
 
         # load button
         tk.Button(self, text='Load', command=open_file).place(x=490, y=42)
@@ -1285,7 +1372,6 @@ class decomposition_ls(tk.Frame):
                             input_file = './denoise_stv/'+filename+'_stv_32bit.tif'
                 eng.least_square(input_file, filename, spectralpath, n_normalize.get(),float(peaks_ent.get().split(',')[0]), float(peaks_ent.get().split(',')[1]), float(shifts_ent.get().split(',')[0]), float(shifts_ent.get().split(',')[1]), float(level_ent.get()), nargout=0)
             elif batch == 1:
-                global filename_batch
                 if denoising is False or n_use.get() == 0:
                     count = 0
                     for i in range(len(os.listdir(directory))):
@@ -1316,12 +1402,13 @@ class decomposition_ls(tk.Frame):
                         for i in range(len(os.listdir('./denoise_bm4d'))):
                             filetype_batch = os.path.splitext(os.listdir('./denoise_bm4d')[i])[1]
                             filename_batch = os.path.splitext(os.listdir('./denoise_bm4d')[i])[0]
+                            filename_final = filename_batch.split('_bm4d')[0]
 
                             if filename_batch != '.png':
                                 count = count + 1
                                 filepath_batch = './denoise_bm4d/' + os.listdir('./denoise_bm4d')[i]
                                 if count == 1:
-                                    sigma = eng.least_square(filepath_batch, filename_batch, spectralpath,
+                                    sigma = eng.least_square(filepath_batch, filename_final, spectralpath,
                                                              n_normalize.get(),
                                                              float(peaks_ent.get().split(',')[0]),
                                                              float(peaks_ent.get().split(',')[1]),
@@ -1330,7 +1417,7 @@ class decomposition_ls(tk.Frame):
                                                              float(level_ent.get()),
                                                              nargout=1)
                                 else:
-                                    eng.least_square_batch(sigma, filepath_batch, filename_batch, spectralpath,
+                                    eng.least_square_batch(sigma, filepath_batch, filename_final, spectralpath,
                                                            n_normalize.get(),
                                                            float(peaks_ent.get().split(',')[0]),
                                                            float(peaks_ent.get().split(',')[1]),

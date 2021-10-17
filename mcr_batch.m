@@ -1,4 +1,4 @@
-function sigma = mcr(input, original_filename, reference, normalize, peak_low, peak_high, raman_low, raman_high, sparsity_level, augmentation, itr)
+function mcr_batch(sigma, input, original_filename, reference, normalize, peak_low, peak_high, raman_low, raman_high, sparsity_level, augmentation, itr)
 %% Load data
 filepath = input;
 
@@ -67,7 +67,6 @@ y_sum = squeeze(mean(y,3));
 figure; histogram(y_sum);
 saveas(gcf, 'mcr_chemical_maps/histogram.png');
 
-sigma = background_noise_level(y);
 
 %BGmask=zeros(size(y_sum));
 %BG=find(y_sum < 0.00);
